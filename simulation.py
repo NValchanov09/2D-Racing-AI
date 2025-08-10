@@ -1,0 +1,106 @@
+import sys
+import pygame
+import neat
+from Car import Car
+
+class Simulation:
+    
+    def __init__(self, car_starting_x, car_starting_y, car_image_path, car_acceleration, car_braking_acceleration, car_angle_change, screen_width, screen_height, circuit_image_path, finish_x, finish_y, generation_time_limit):
+
+        self.car_starting_x = car_starting_x
+        self.car_starting_y = car_starting_y
+        self.car_image_path = car_image_path
+        self.car_acceleration = car_acceleration
+        self.car_braking_acceleration = car_braking_acceleration
+        self.car_angle_change = car_angle_change
+        self.screen_width = screen_width
+        self.screen_height = screen_height
+        self.circuit_image_path = circuit_image_path
+        self.generation_time_limit = generation_time_limit
+        self.finish_x = finish_x
+        self.finish_y = finish_y
+
+        self.generation = -1
+
+    def draw_screen(self, alive_counter, cars, screen, circuit, generation_font, standard_font, clock):
+
+        screen.blit(circuit, (0, 0))
+        for car in cars:
+            if car.is_alive():
+                car.draw(screen)
+
+        text = generation_font.render("Generation: " + str(self.generation), True, (0,0,0))
+        text_rect = text.get_rect()
+        text_rect.center = (900, 450)
+        screen.blit(text, text_rect)
+
+        text = standard_font.render("Alive: " + str(alive_counter), True, (0, 0, 0))
+        text_rect = text.get_rect()
+        text_rect.center = (900, 490)
+        screen.blit(text, text_rect)
+
+        pygame.display.flip()
+        clock.tick(60) 
+
+    def count_alive(self, cars, genomes, circuit):
+
+        alive_counter = 0
+
+        for i, car in enumerate(cars):
+            if car.is_alive():
+                alive_counter += 1
+                car.update(circuit)
+                genomes[i][1].fitness += car.get_fitness()
+
+        return alive_counter
+
+    def simulate(self, genomes, config):
+
+        nets = []
+        cars = []
+
+        for id, genome in genomes:
+            net = neat.nn.FeedForwardNetwork.create(genome, config)
+            nets.append(net)
+            genome.fitness = 0
+
+            cars.append(Car(self.car_starting_x, self.car_starting_y, self.car_image_path, self.car_acceleration, self.car_braking_acceleration, self.car_angle_change))
+
+        pygame.init()
+
+        screen = pygame.display.set_mode((self.screen_width, self.screen_height))
+        clock = pygame.time.Clock()
+        generation_font = pygame.font.SysFont("Arial", 70)
+        standard_font = pygame.font.SysFont("Arial", 30)
+        circuit = pygame.image.load(self.circuit_image_path)
+        circuit = pygame.transform.scale(circuit, (self.screen_width, self.screen_height))
+
+        self.generation += 1
+
+        time_begin = pygame.time.get_ticks()
+
+
+
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    sys.exit(0)
+
+            for i, car in enumerate(cars):
+                output = nets[i].activate(car.get_inputs())
+                choice = output.index(max(output))
+
+                car.perform(choice)
+
+            alive_counter = self.count_alive(cars, genomes, circuit)
+
+            if alive_counter == 0:
+                break
+
+            time_current = pygame.time.get_ticks()
+
+            if time_current - time_begin > self.generation_time_limit:
+                break
+
+            self.draw_screen(alive_counter, cars, screen, circuit, generation_font, standard_font, clock)
+

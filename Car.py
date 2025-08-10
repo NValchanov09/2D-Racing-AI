@@ -27,6 +27,7 @@ def clamp(x, lb, ub):
 
 class Car:
     def __init__(self, x, y, image_path, acceleration, braking_acceleration, angle_change):
+
         self.sprite = pygame.image.load(image_path)
         self.sprite = pygame.transform.scale(self.sprite, (car_width, car_height))
         self.rotated_sprite = self.sprite
@@ -45,28 +46,32 @@ class Car:
         self.alive = True
         self.distance = 0
         self.time_elapsed = 0
+        self.laps = 0
 
     def draw(self, screen):
+
         screen.blit(self.rotated_sprite, self.position)
-        self.draw_sensors(screen)
+        # self.draw_sensors(screen)
 
     def draw_sensors(self, screen):
+
         for sensor in self.sensors:
             position, distance = sensor
             pygame.draw.line(screen, sensor_color, self.center, position, 1)
             pygame.draw.circle(screen, sensor_color, position, 6)
 
     def collision_check(self, map):
-        self.alive = True
 
+        self.alive = True
         for corner in self.corners:
             if map.get_at((int(corner[0]), int(corner[1]))) == border_color:
                 self.alive = False
+                self.time_elapsed = 0
                 break
 
     def update_sensor(self, sensor_angle, map):
-        length = 0
 
+        length = 0
         x = int(self.center[0])
         y = int(self.center[1])
 
@@ -79,6 +84,7 @@ class Car:
         self.sensors.append([(x, y), distance])
 
     def rotate_sprite(self):
+
         rectangle = self.sprite.get_rect()
         rotated_sprite = pygame.transform.rotate(self.sprite, self.angle)
         rotated_rectangle = rectangle.copy()
@@ -89,7 +95,7 @@ class Car:
 
     def update(self, map):
 
-        self.velocity = max(0, self.velocity)
+        self.velocity = max(5, self.velocity)
 
         self.rotate_sprite()
 
@@ -115,23 +121,49 @@ class Car:
 
         self.sensors.clear()
 
-        # for sensor_angle in range(-90, 120, 45):
-            # self.update_sensor(sensor_angle, map)
+        for sensor_angle in range(-90, 120, 45):
+            self.update_sensor(sensor_angle, map)
 
     def is_alive(self):
+
         return self.alive
     
     def get_fitness(self):
+
         return self.distance / self.time_elapsed
     
+    def get_inputs(self):
+        
+        sensors = self.sensors
+        inputs = [0, 0, 0, 0, 0]
+
+        for i, sensor in enumerate(sensors):
+            inputs[i] = int(sensor[1] / 30)
+
+        return inputs
+    
     def rotate(self, direction):
+
         if direction == True:
             self.angle += self.angle_change
         else:
             self.angle -= self.angle_change
     
     def move(self, direction):
+
         if direction == True:
             self.velocity += self.acceleration
         else:
             self.velocity -= self.braking_acceleration
+
+    def perform(self, choice):
+
+        if choice == 0:
+            self.move(True)
+        elif choice == 1:
+            self.move(False)
+        elif choice == 2:
+            self.rotate(True)
+        else:
+            self.rotate(False)
+    
