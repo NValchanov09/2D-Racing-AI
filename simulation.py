@@ -22,7 +22,7 @@ class Simulation:
 
         self.generation = -1
 
-    def draw_screen(self, alive_counter, cars, screen, circuit, generation_font, standard_font, clock):
+    def draw_screen(self, alive_counter, laps_all, cars, finish, screen, circuit, generation_font, standard_font, clock):
 
         screen.blit(circuit, (0, 0))
         for car in cars:
@@ -36,23 +36,37 @@ class Simulation:
 
         text = standard_font.render("Alive: " + str(alive_counter), True, (0, 0, 0))
         text_rect = text.get_rect()
-        text_rect.center = (900, 490)
+        text_rect.center = (900, 520)
         screen.blit(text, text_rect)
+
+        text = standard_font.render("Laps sum: " + str(laps_all), True, (0, 0, 0))
+        text_rect = text.get_rect()
+        text_rect.center = (900, 570)
+        screen.blit(text, text_rect)
+
+        text = standard_font.render("Laps average: " + str(int(laps_all / alive_counter)), True, (0, 0, 0))
+        text_rect = text.get_rect()
+        text_rect.center = (900, 620)
+        screen.blit(text, text_rect)
+
+        pygame.draw.rect(screen, (255, 255, 0), finish)
 
         pygame.display.flip()
         clock.tick(60) 
 
-    def count_alive(self, cars, genomes, circuit):
+    def update_cars(self, cars, genomes, circuit, finish):
 
         alive_counter = 0
+        laps_all = 0
 
         for i, car in enumerate(cars):
             if car.is_alive():
+                car.update(circuit, finish)
+                genomes[i][1].fitness = car.get_fitness()
                 alive_counter += 1
-                car.update(circuit)
-                genomes[i][1].fitness += car.get_fitness()
+                laps_all += car.laps
 
-        return alive_counter
+        return [alive_counter, laps_all]
 
     def simulate(self, genomes, config):
 
@@ -74,11 +88,11 @@ class Simulation:
         standard_font = pygame.font.SysFont("Arial", 30)
         circuit = pygame.image.load(self.circuit_image_path)
         circuit = pygame.transform.scale(circuit, (self.screen_width, self.screen_height))
+        finish = pygame.Rect(self.finish_x, self.finish_y, 30, 250)
 
         self.generation += 1
 
         time_begin = pygame.time.get_ticks()
-
 
 
         while True:
@@ -92,7 +106,10 @@ class Simulation:
 
                 car.perform(choice)
 
-            alive_counter = self.count_alive(cars, genomes, circuit)
+            info = self.update_cars(cars, genomes, circuit, finish)
+
+            alive_counter = info[0]
+            laps_all = info[1]
 
             if alive_counter == 0:
                 break
@@ -102,5 +119,5 @@ class Simulation:
             if time_current - time_begin > self.generation_time_limit:
                 break
 
-            self.draw_screen(alive_counter, cars, screen, circuit, generation_font, standard_font, clock)
+            self.draw_screen(alive_counter, laps_all, cars, finish, screen, circuit, generation_font, standard_font, clock)
 

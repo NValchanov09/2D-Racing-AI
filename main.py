@@ -6,16 +6,16 @@ from simulation import Simulation
 screen_width = 2560
 screen_height = 1440
 
-car_starting_x = 900
+car_starting_x = 1050
 car_starting_y = 1200
 
 car_acceleration = 0.2
 car_braking_acceleration = 0.1
 car_angle_change = 5
+ 
+generation_time_limit = 30 * 1000 # in milliseconds
 
-generation_time_limit = 20 * 1000 # in milliseconds
-
-finish_x = 900
+finish_x = 1000
 finish_y = 1100
 
 car_image_path = "car.png"

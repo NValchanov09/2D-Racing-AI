@@ -35,18 +35,21 @@ class Car:
         self.position = [x, y]
         self.width = self.sprite.get_width()
         self.height = self.sprite.get_height()
+        self.center = [self.position[0] + car_width / 2, self.position[1] + car_height / 2]
         self.corners = []
+        
         self.angle = 0
         self.velocity = 0
         self.angle_change = angle_change
         self.acceleration = acceleration
         self.braking_acceleration = braking_acceleration
-        self.center = [self.position[0] + car_width / 2, self.position[1] + car_height / 2]
         self.sensors = []
+
         self.alive = True
         self.distance = 0
-        self.time_elapsed = 0
+
         self.laps = 0
+        self.passed = False
 
     def draw(self, screen):
 
@@ -66,7 +69,6 @@ class Car:
         for corner in self.corners:
             if map.get_at((int(corner[0]), int(corner[1]))) == border_color:
                 self.alive = False
-                self.time_elapsed = 0
                 break
 
     def update_sensor(self, sensor_angle, map):
@@ -93,14 +95,13 @@ class Car:
 
         self.rotated_sprite = rotated_sprite
 
-    def update(self, map):
+    def update(self, map, finish):
 
-        self.velocity = max(5, self.velocity)
+        self.velocity = max(1, self.velocity)
 
         self.rotate_sprite()
 
         self.distance += self.velocity
-        self.time_elapsed += 1
 
         self.position[0] += math.cos(math.radians(360 - self.angle)) * self.velocity
         clamp(self.position[0], 0, screen_width)
@@ -119,6 +120,8 @@ class Car:
 
         self.collision_check(map)
 
+        self.check_finish(finish)
+
         self.sensors.clear()
 
         for sensor_angle in range(-90, 120, 45):
@@ -130,7 +133,7 @@ class Car:
     
     def get_fitness(self):
 
-        return self.distance / self.time_elapsed
+        return self.laps * 3500 + self.distance
     
     def get_inputs(self):
         
@@ -166,4 +169,13 @@ class Car:
             self.rotate(True)
         else:
             self.rotate(False)
+
+    def check_finish(self, finish):
+            
+        if finish.collidepoint(self.center[0], self.center[1]):
+            if not self.passed:
+                self.laps += 1
+                self.passed = True
+        else:
+            self.passed = False
     
