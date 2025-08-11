@@ -15,7 +15,7 @@ car_angle_change = 5
  
 generation_time_limit = 30 * 1000 # in milliseconds
 
-finish_x = 1000
+finish_x = 875
 finish_y = 1100
 
 car_image_path = "car.png"

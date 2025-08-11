@@ -49,7 +49,7 @@ class Simulation:
         text_rect.center = (900, 620)
         screen.blit(text, text_rect)
 
-        pygame.draw.rect(screen, (255, 255, 0), finish)
+        #pygame.draw.rect(screen, (255, 255, 0), finish)
 
         pygame.display.flip()
         clock.tick(60) 
