@@ -4,12 +4,6 @@ import pygame
 sensor_color = (255, 255, 0)
 border_color = (37, 112, 42, 255)
 
-screen_width = 2560
-screen_height = 1440
-
-car_width = 100
-car_height = 100
-
 def calculate_distance(x1, y1, x2, y2):
     dx = x1 - x2
     dy = y1 - y2
@@ -26,16 +20,12 @@ def clamp(x, lb, ub):
         x = ub
 
 class Car:
-    def __init__(self, x, y, image_path, acceleration, braking_acceleration, angle_change):
-
-        self.sprite = pygame.image.load(image_path)
-        self.sprite = pygame.transform.scale(self.sprite, (car_width, car_height))
-        self.rotated_sprite = self.sprite
+    def __init__(self, x, y, width, height, image_path, acceleration, braking_acceleration, angle_change, laps_multiplier, alive_multiplier, time_limit, screen_width, screen_height):
 
         self.position = [x, y]
-        self.width = self.sprite.get_width()
-        self.height = self.sprite.get_height()
-        self.center = [self.position[0] + car_width / 2, self.position[1] + car_height / 2]
+        self.width = width
+        self.height = height
+        self.center = [self.position[0] + self.width / 2, self.position[1] + self.height / 2]
         self.corners = []
         
         self.angle = 0
@@ -49,7 +39,19 @@ class Car:
         self.distance = 0
 
         self.laps = 0
+        self.laps_multiplier = laps_multiplier
+        self.alive_multiplier = alive_multiplier
+        self.time_limit = time_limit
         self.passed = False
+
+        self.time_started = 0
+
+        self.sprite = pygame.image.load(image_path)
+        self.sprite = pygame.transform.scale(self.sprite, (self.width, self.height))
+        self.rotated_sprite = self.sprite
+
+        self.screen_width = screen_width
+        self.screen_height = screen_height
 
     def draw(self, screen):
 
@@ -99,19 +101,21 @@ class Car:
 
         self.velocity = max(1, self.velocity)
 
+        if self.time_started == 0:
+            self.time_started = pygame.time.get_ticks()
+
         self.rotate_sprite()
+
+        self.position[0] += math.cos(math.radians(360 - self.angle)) * self.velocity
+        clamp(self.position[0], 0, self.screen_width)
+        self.position[1] += math.sin(math.radians(360 - self.angle)) * self.velocity
+        clamp(self.position[1], 0, self.screen_height)
 
         self.distance += self.velocity
 
-        self.position[0] += math.cos(math.radians(360 - self.angle)) * self.velocity
-        clamp(self.position[0], 0, screen_width)
-        self.position[1] += math.sin(math.radians(360 - self.angle)) * self.velocity
-        clamp(self.position[1], 0, screen_height)
+        self.center = [self.position[0] + self.width / 2, self.position[1] + self.height / 2]
 
-
-        self.center = [self.position[0] + car_width / 2, self.position[1] + car_height / 2]
-
-        length = car_width / 2
+        length = self.width / 2
         left_top = [self.center[0] + math.cos(math.radians(360 - (self.angle + 30))) * length, self.center[1] + math.sin(math.radians(360 - (self.angle + 30))) * length]
         right_top = [self.center[0] + math.cos(math.radians(360 - (self.angle + 150))) * length, self.center[1] + math.sin(math.radians(360 - (self.angle + 150))) * length]
         left_bottom = [self.center[0] + math.cos(math.radians(360 - (self.angle + 210))) * length, self.center[1] + math.sin(math.radians(360 - (self.angle + 210))) * length]
@@ -133,7 +137,9 @@ class Car:
     
     def get_fitness(self):
 
-        return self.laps * 3500 + self.distance
+        survival_score = self.calculate_time_alive() / self.time_limit
+
+        return self.alive * survival_score * self.alive_multiplier + self.laps * self.laps_multiplier + self.distance
     
     def get_inputs(self):
         
@@ -178,4 +184,10 @@ class Car:
                 self.passed = True
         else:
             self.passed = False
-    
+
+    def calculate_time_alive(self):
+        
+        time_current = pygame.time.get_ticks()
+
+        return time_current - self.time_started
+        

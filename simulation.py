@@ -5,10 +5,12 @@ from Car import Car
 
 class Simulation:
     
-    def __init__(self, car_starting_x, car_starting_y, car_image_path, car_acceleration, car_braking_acceleration, car_angle_change, screen_width, screen_height, circuit_image_path, finish_x, finish_y, generation_time_limit):
+    def __init__(self, car_starting_x, car_starting_y, car_width, car_height, car_image_path, car_acceleration, car_braking_acceleration, car_angle_change, screen_width, screen_height, circuit_image_path, finish_x, finish_y, generation_time_limit, laps_multiplier, alive_multiplier):
 
         self.car_starting_x = car_starting_x
         self.car_starting_y = car_starting_y
+        self.car_width = car_width
+        self.car_height = car_height
         self.car_image_path = car_image_path
         self.car_acceleration = car_acceleration
         self.car_braking_acceleration = car_braking_acceleration
@@ -19,6 +21,8 @@ class Simulation:
         self.generation_time_limit = generation_time_limit
         self.finish_x = finish_x
         self.finish_y = finish_y
+        self.laps_multiplier = laps_multiplier
+        self.alive_multiplier = alive_multiplier
 
         self.generation = -1
 
@@ -62,9 +66,10 @@ class Simulation:
         for i, car in enumerate(cars):
             if car.is_alive():
                 car.update(circuit, finish)
-                genomes[i][1].fitness = car.get_fitness()
                 alive_counter += 1
                 laps_all += car.laps
+            
+            genomes[i][1].fitness = car.get_fitness()
 
         return [alive_counter, laps_all]
 
@@ -78,7 +83,7 @@ class Simulation:
             nets.append(net)
             genome.fitness = 0
 
-            cars.append(Car(self.car_starting_x, self.car_starting_y, self.car_image_path, self.car_acceleration, self.car_braking_acceleration, self.car_angle_change))
+            cars.append(Car(self.car_starting_x, self.car_starting_y, self.car_width, self.car_height, self.car_image_path, self.car_acceleration, self.car_braking_acceleration, self.car_angle_change, self.laps_multiplier, self.alive_multiplier, self.generation_time_limit, self.screen_width, self.screen_height))
 
         pygame.init()
 

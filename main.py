@@ -8,6 +8,8 @@ screen_height = 1440
 
 car_starting_x = 1050
 car_starting_y = 1200
+car_width = 100
+car_height = 100
 
 car_acceleration = 0.2
 car_braking_acceleration = 0.1
@@ -20,6 +22,9 @@ finish_y = 1100
 
 car_image_path = "car.png"
 circuit_image_path = "circuit.png"
+
+laps_multiplier = 3500
+alive_multiplier = 7500
 
 if __name__ == "__main__":
 
@@ -35,6 +40,6 @@ if __name__ == "__main__":
     stats = neat.StatisticsReporter()
     population.add_reporter(stats)
     
-    sim = Simulation(car_starting_x, car_starting_y, car_image_path, car_acceleration, car_braking_acceleration, car_angle_change, screen_width, screen_height, circuit_image_path, finish_x, finish_y, generation_time_limit)
+    sim = Simulation(car_starting_x, car_starting_y, car_width, car_height, car_image_path, car_acceleration, car_braking_acceleration, car_angle_change, screen_width, screen_height, circuit_image_path, finish_x, finish_y, generation_time_limit, laps_multiplier, alive_multiplier)
 
     population.run(sim.simulate, 1000)
